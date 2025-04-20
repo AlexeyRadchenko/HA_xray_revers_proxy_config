@@ -1,0 +1,77 @@
+// /etc/v2ray/config.json
+
+{
+  "log": {
+    "loglevel": "warning"
+  },
+  "inbounds": [],
+  "outbounds": [
+     {
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "address": "your_server_domain.com",
+            "port": 12233, // some port 
+            "users": [
+              {
+                "id": "sdfsf-sdfsdfs-44343-gfdsfgd-3423", //some client id
+                "encryption":"none",
+                "flow": "xtls-rprx-vision"
+              }
+            ]
+          }
+        ]
+      },
+        "streamSettings": {
+         "network": "tcp",
+         "security": "tls",
+         "tlsSettings": {
+           "serverName": "your_server_domain.com",
+           "allowInsecure": false
+         }
+      },
+      "tag": "to-server"
+    },
+    {
+      "protocol": "freedom",
+      "tag": "direct"
+    },
+    {
+    "tag": "web_server_local",
+    "protocol": "freedom",
+    "settings": {
+      "redirect": "127.0.0.1:8123"
+    }
+ }
+  ],
+  "reverse": {
+    "bridges": [
+      {
+        "tag": "bridge-tag",
+        "domain": "reverse.ha.local" // фиктивно, может быть любое
+      }
+    ]
+  },
+  "routing": {
+    "rules": [
+    {
+      // Запрос от bridge-tag, и домен соответствует настроенному домену,
+      // это означает, что это попытка установить обратный туннель к portal,
+      // маршрутизируем на to-server, то есть подключаемся к portal
+      "type": "field",
+      "inboundTag": ["bridge-tag"],
+      "domain": ["full:reverse.ha.local"],
+      "outboundTag": "to-server"
+    },
+    {
+      // Трафик от portal также будет выходить из bridge, но без указанного выше домена
+      // маршрутизируем на out, то есть перенаправляем на веб-сервер
+      "type": "field",
+      "inboundTag": ["bridge-tag"],
+      "outboundTag": "web_server_local"
+    }
+    ]
+  }
+}
+
