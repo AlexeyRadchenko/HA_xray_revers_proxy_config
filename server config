@@ -1,0 +1,105 @@
+// "/usr/local/etc/xray/config.json"
+{
+  "reverse": {
+      "portals": [
+        {
+          "tag": "portal",
+          "domain": "reverse.ha.local"
+        }
+      ]
+  },
+  "inbounds": [
+    {
+      "port": 5555, // some port
+      "tag": "interconn",
+      "protocol": "vless",
+      "settings": {
+        "clients": [
+          {
+            "id": "01f2fasdas-g433453-6645645-234234", #some id client
+            "flow": "xtls-rprx-vision"  // можно удалить, если не используешь XTLS
+          },
+          {
+            "id": "05e21307-adsikflsdf-afdsdjfsd-asdas", //some another id client
+            "level": 0,
+            "email": "@external"
+          }
+        ],
+        "decryption": "none"
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "tls",
+        "tlsSettings": {
+          "alpn": "http/1.1",
+          "certificates": [
+            {
+              "certificateFile": "/etc/v2ray/cert/fullchain.pem",
+              "keyFile": "/etc/v2ray/cert/privkey.pem"
+            }
+          ]
+        }
+      },
+      "sniffing": {
+                "enabled": true,
+                "destOverride": [
+                    "http",
+                    "tls"
+                ]
+      }
+    },
+    {
+    "tag": "web_server_forward",
+    "port": 8123,
+    "protocol": "dokodemo-door",
+    "settings": {
+      "address": "127.0.0.1",
+      "port": 8123,
+      "network": "tcp"
+    },
+    "sniffing": {
+        "enabled": true,
+        "destOverride": ["http", "tls"]
+    },
+    "streamSettings": {
+        "network": "tcp",
+        "security": "tls",
+        "tlsSettings": {
+          "alpn": "http/1.1",
+          "certificates": [
+            {
+              "certificateFile": "/etc/v2ray/cert/fullchain.pem",
+              "keyFile": "/etc/v2ray/cert/privkey.pem"
+            }
+          ]
+        }
+     }
+  }
+  ],
+  "outbounds": [
+    {
+      "protocol": "freedom",
+      "tag": "direct"
+    }
+  ],
+  "routing": {
+        "rules": [
+          {
+           // Если входящее соединение помечено web_server_forward, значит, это запрос из Интернета,
+           // маршрутизируем на portal, который в конечном итоге перенаправит его на bridge
+           "type": "field",
+           "inboundTag": ["web_server_forward"],
+           "outboundTag": "portal"
+          },
+          {
+           // Если входящее соединение от interconn, значит, это запрос от bridge для установления обратного туннеля,
+           // маршрутизируем на portal, который в конечном итоге перенаправит его соответствующему клиенту в Интернете.
+           // Обратите внимание: этот запрос будет содержать домен, настроенный ранее, поэтому portal сможет различать два типа запросов,
+           // маршрутизируемых на portal.
+           "type": "field",
+           "inboundTag": ["interconn"],
+           "outboundTag": "portal"
+          }
+        ]
+  }
+}
